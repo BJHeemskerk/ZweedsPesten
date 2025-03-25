@@ -45,6 +45,10 @@ class ZweedsPesten():
 
         self.score_map = {0: 3, 1: 2, 2: 1}
 
+    def get_player_instance(self, name):
+        player_types = {"tim": Tim, "low": Low, "jasper" : Jasper}
+        return player_types.get(name, Player)(name)
+
     def create_deck(self):
         ranks = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"]
         suits = ["♠", "♥", "♦", "♣"]
