@@ -8,7 +8,7 @@ card game naar een python based simulatie.
 import random
 import matplotlib.pyplot as plt
 import pandas as pd
-from src.main import Player
+from main import Player
 
 CARD_VALUES = {
                 "2": "two",
