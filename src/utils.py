@@ -8,7 +8,7 @@ card game naar een python based simulatie.
 import random
 import matplotlib.pyplot as plt
 import pandas as pd
-from main import Player
+from main import Player, Tim, Low
 
 CARD_VALUES = {
                 "2": "two",
@@ -31,6 +31,8 @@ class ZweedsPesten():
     def __init__(self, players):
         player_types = {
         #    "busse": Busse,
+        "tim": Tim,
+        "low": Low
         }
 
         self.players = [player_types.get(name, Player)(name) for name in players]
