@@ -44,6 +44,10 @@ class ZweedsPesten():
 
         self.score_map = {0: 3, 1: 2, 2: 1}
 
+    def get_player_instance(self, name):
+        player_types = {"tim": Tim, "low": Low}
+        return player_types.get(name, Player)(name)
+
     def create_deck(self):
         ranks = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"]
         suits = ["♠", "♥", "♦", "♣"]
@@ -167,6 +171,7 @@ class ZweedsPesten():
             2 - Full verbose (detailed game state)
         """
         game_phase = "choose_display_cards"
+        turn_timer = 0
         self.winners = []
 
         self.deck = self.create_deck()
@@ -189,6 +194,7 @@ class ZweedsPesten():
                 print("-----------------------------------------")
 
         while len(self.winners) + 1 < len(self.players):
+            turn_timer += 1
             for player in self.players:
                 if self.check_win(player):
                     if player.name not in self.winners:
@@ -302,7 +308,6 @@ class ZweedsPesten():
         if verbose >= 1:
             print("\nGame over! Winners in order:", self.winners)
 
-
     def simulate_games(self, sims, verbose=0):
         self.placements = {}
 
@@ -310,7 +315,8 @@ class ZweedsPesten():
         all_permutations = list(permutations(player_names))  # Alle permutaties genereren
 
         for perm in all_permutations:
-            print(f"\nSimulating with player order: {perm}")  # Optioneel, voor debugging
+            if verbose >= 2:
+                print(f"\nSimulating with player order: {perm}")  
 
             for i in range(sims):
                 # Maak een nieuwe game met deze permutatie van spelers
