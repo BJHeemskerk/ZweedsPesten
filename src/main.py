@@ -205,3 +205,52 @@ class Low(Player):
         else:
             move = sorted(playable_cards, key=lambda card: LOW_play_values[card[1:]], reverse=True)[:1]
             return move[0]      
+        
+
+
+class Jasper(Player):
+    """
+    lage kaarten vroeg kwijt te raken. 
+    """
+    """
+    Speelt altijd de laagste mogelijk kaart
+    """
+    def play_move(self, game_phase, playable_cards, stack_of_cards):
+
+        LOW_play_values = {
+            "2": 12,
+            "3": 14,
+            "4": 2,
+            "5": 3,
+            "6": 4,
+            "7": 5,
+            "8": 6,
+            "9": 7,
+            "10": 13,
+            "J": 8,
+            "Q": 9,
+            "K": 10,
+            "A": 11,
+        }
+
+        if game_phase == "choose_display_cards":
+            move = sorted(playable_cards, key=lambda card: LOW_play_values[card[1:]], reverse=True)[:3]
+            return move
+        
+        if game_phase == "main":
+            if len(playable_cards) > 1:
+                if "take" in playable_cards:
+                    playable_cards.remove("take") 
+                    move = sorted(playable_cards, key=lambda card: LOW_play_values[card[1:]], reverse=False)[:1]
+                    return move[0]  
+            else:
+                return "take"
+
+        if game_phase == "double_card":
+            playable_cards.remove("skip")
+            move = sorted(playable_cards, key=lambda card: LOW_play_values[card[1:]], reverse=False)[:1]
+            return move[0]
+            
+        else:
+            move = sorted(playable_cards, key=lambda card: LOW_play_values[card[1:]], reverse=False)[:1]
+            return move[0]      

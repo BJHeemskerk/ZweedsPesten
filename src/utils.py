@@ -9,7 +9,7 @@ import random
 import matplotlib.pyplot as plt
 import pandas as pd
 from itertools import permutations
-from main import Player, Tim, Low
+from main import Player, Tim, Low, Jasper
 
 
 CARD_VALUES = {
@@ -34,7 +34,8 @@ class ZweedsPesten():
         player_types = {
         #    "busse": Busse,
         "tim": Tim,
-        "low": Low
+        "low": Low,
+        "jasper" : Jasper
         }
 
         self.players = [player_types.get(name, Player)(name) for name in players]
