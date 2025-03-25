@@ -245,18 +245,18 @@ class Low(Player):
             if len(playable_cards) > 1:
                 if "take" in playable_cards:
                     playable_cards.remove("take") 
-                    move = sorted(playable_cards, key=lambda card: LOW_play_values[card[1:]], reverse=True)[:1]
+                    move = sorted(playable_cards, key=lambda card: LOW_play_values[card[1:]], reverse=False)[:1]
                     return move[0]  
             else:
                 return "take"
 
         if game_phase == "double_card":
             playable_cards.remove("skip")
-            move = sorted(playable_cards, key=lambda card: LOW_play_values[card[1:]], reverse=True)[:1]
+            move = sorted(playable_cards, key=lambda card: LOW_play_values[card[1:]], reverse=False)[:1]
             return move[0]
             
         else:
-            move = sorted(playable_cards, key=lambda card: LOW_play_values[card[1:]], reverse=True)[:1]
+            move = sorted(playable_cards, key=lambda card: LOW_play_values[card[1:]], reverse=False)[:1]
             return move[0]      
         
 
@@ -307,3 +307,68 @@ class Jasper(Player):
         else:
             move = sorted(playable_cards, key=lambda card: LOW_play_values[card[1:]], reverse=False)[:1]
             return move[0]      
+        
+class Justice_and_Terror(Player):
+    """
+
+    """
+    def play_move(self, game_phase, playable_cards, stack_of_cards):
+
+        LOW_play_values = {
+            "2": 12,
+            "3": 14,
+            "4": 2,
+            "5": 3,
+            "6": 4,
+            "7": 5,
+            "8": 6,
+            "9": 7,
+            "10": 13,
+            "J": 8,
+            "Q": 9,
+            "K": 10,
+            "A": 11,
+        }
+    
+        Tim_play_values = {
+            "2": 20,
+            "3": 1,
+            "4": 14,
+            "5": 13,
+            "6": 12,
+            "7": 11,
+            "8": 9,
+            "9": 8,
+            "10": 2,
+            "J": 6,
+            "Q": 5,
+            "K": 4,
+            "A": 3,
+        }
+
+        if game_phase == "choose_display_cards":
+            move = sorted(playable_cards, key=lambda card: LOW_play_values[card[1:]], reverse=True)[:3]
+            return move
+        
+        if game_phase == "main":
+            if len(playable_cards) > 1:
+                if "take" in playable_cards:
+                    playable_cards.remove("take") 
+                    move = sorted(playable_cards, key=lambda card: LOW_play_values[card[1:]], reverse=False)[:1]
+                    return move[0]  
+            else:
+                return "take"
+
+        if game_phase == "double_card":
+            playable_cards.remove("skip")
+            scores = [Tim_play_values[card[1:]] for card in playable_cards]
+            average_score = sum(scores) / len(scores)
+            #print(playable_cards, average_score)
+            if average_score < 4:
+                return "skip"
+            else:
+                return playable_cards[-1]
+            
+        else:
+            move = sorted(playable_cards, key=lambda card: LOW_play_values[card[1:]], reverse=False)[:1]
+            return move[0]  

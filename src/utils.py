@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from itertools import permutations
 
-from main import Player, Tim, Low, Jasper, Busse
+from main import Player, Tim, Low, Jasper, Busse, Justice_and_Terror
 
 
 
@@ -38,7 +38,8 @@ class ZweedsPesten():
             "busse": Busse,
             "tim": Tim,
             "low": Low,
-            "jasper" : Jasper
+            "jasper" : Jasper,
+            "justice_and_terror": Justice_and_Terror
 
         }
 
@@ -51,7 +52,7 @@ class ZweedsPesten():
 
     def get_player_instance(self, name):
 
-        player_types = {"tim": Tim, "low": Low, "jasper" : Jasper}
+        player_types = {"tim": Tim, "low": Low, "jasper" : Jasper, "busse": Busse, "justice_and_terror": Justice_and_Terror}
 
         return player_types.get(name, Player)(name)
 
