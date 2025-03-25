@@ -23,6 +23,19 @@ CARD_VALUES = {
 
 
 class Player():
+    """ 
+    Deze class definieert een speler met diens attributen, zoals naam en hand en de acties die de speler kan ondernemen tijdens diens beurt.
+    
+    Attributen:
+        name (str): Naam van de speler.
+        hidden_cards (list): De gesloten kaarten.
+        displayed_cards (list): De kaarten die open liggen.
+        hand_cards (list): De kaarten in de hand van de speler. 
+    """
+
+
+
+    
     def __init__(self, name):
         self.name = name
         self.hidden_cards = []
@@ -30,6 +43,14 @@ class Player():
         self.hand_cards = []
 
     def remove_card(self, card, origin):
+        """
+        Deze method geeft aan dat een kaart uit de hand, die open ligt, of die gesloten ligt kan worden gebruikt / weggaat uit de inventory van de
+        speler.
+
+        Parameters:
+        card: De kaart waar een speler een actie mee zal ondernemen.
+        origin: Of de kaart uit de hand, van de kaarten die open liggen of van de kaarten die gesloten liggen komt.
+        """
         if origin == "hand":
             self.hand_cards.remove(card)
         elif origin == "displayed":
@@ -41,6 +62,18 @@ class Player():
                 self.hand_cards.remove(card)
 
     def play_move(self, game_phase, playable_cards, stack_of_cards):
+        """
+        Deze method kiest willekeurig of 3 kaarten, of 1 kaart en stopt ze in  move. 
+
+        Parameters:
+        game_phase (str):
+        playable_cards(list): De kaarten die mogen worden gespeeld.
+        stack_of_cards(list):  Huidige speelstapel, maar wordt niet gebruikt in deze method.
+
+        Return: 
+        move(str): 
+        """
+        
         """Default strategy (random choice)."""
         move = []
 

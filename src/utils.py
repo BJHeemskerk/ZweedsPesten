@@ -32,7 +32,32 @@ CARD_VALUES = {
 
 
 class ZweedsPesten():
+    """ 
+    Deze class definieert een ronde van het spel Zweeds Pesten, als object.
+    
+    Attributen:
+        players (list): De namen van de speler-objecten
+        stack_of_cards (list): De aftrekstapel
+        winners (str): De naam van de speler die heeft gewonnen: goud, zilver, brons.
+        placements (dict): Een dictionary die de eindpositie van de players aangeeft
+        deck(list): Een lijst met te gebruiken kaarten in het spel.
+        score_map (dict): Een mapping die eindposities vertaalt naar score. Door meerdere potjes te spelen kan er een uiteindelijke winnaar worden bepaald.
+    """
+
+
+
+    
     def __init__(self, players):
+        """
+        Constructor waarin players, stack_of_cards, winners en placements worden geinitialiserd en de score_map wordt toegewenzen in het ZweedsPesten-object.
+
+        Parameters:
+        self (ZweedsPesten): Het huidige ZweedsPesten-object.
+        players (list): De lijst met spelers.
+
+        """
+
+        
         player_types = {
 
             "busse": Busse,
@@ -51,18 +76,46 @@ class ZweedsPesten():
         self.score_map = {0: 3, 1: 2, 2: 1}
 
     def get_player_instance(self, name):
+        """
+        Een getter voor player_type objects van het Player object.
+
+        Attributes:
+        name (str): Naam van de gewenste strategie (zoals "tim" of "busse"). 
+
+        Return:
+        Player (object): Haalt een speler op als de strategienaam bekend is (zoals "tim" of "busse"). Als de spelernaam niet in de lijst voorkomt wordt er een 
+        standaard Player aangemaakt en die krijgt dan de ingevoerde naam. 
+
+        """
+        
 
         player_types = {"tim": Tim, "low": Low, "jasper" : Jasper, "busse": Busse, "justice_and_terror": Justice_and_Terror}
 
         return player_types.get(name, Player)(name)
 
     def create_deck(self):
+        """
+        Creeert een kaartspel
+
+        Return:
+        anoniem object (list): list met een kleur voor elk cijfer/plaatje van de kaarten in het formaat <kleur><waarde>
+
+        
+        """
         ranks = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"]
         suits = ["♠", "♥", "♦", "♣"]
 
         return [f"{suit}{rank}" for rank in ranks for suit in suits]
 
     def draw_card(self, deck, hand):
+        """
+        Trekt 1 kaart van de stapel zolang er nog kaarten zijn. 
+
+        Parameters:
+        deck (list): De stapel kaarten waarvan getrokken kan worden.
+        hand (list): Kaarten in de hand.
+        
+        """
         if deck:
             hand.append(deck.pop())
 
@@ -74,6 +127,17 @@ class ZweedsPesten():
                 self.draw_card(self.deck, player.hand_cards)
 
     def valid_cards(self, hand, top_card):
+        """
+        Bepaalt welke kaarten mogen worden gespeeld.
+
+        Parameters:
+        hand (list): De kaarten in de hand
+        top_card (str): De laatste kaart die is gelegd.
+
+        Return:
+        
+
+        """
         top_card_value = CARD_VALUES[top_card[1:]]
 
         valid_cards = []
@@ -105,9 +169,33 @@ class ZweedsPesten():
         return valid_cards
     
     def check_win(self, player):
+        """
+        Kijkt of de speler heeft gewonnen, wat het geval is als diens hand leeg is, hij geen open en geen gesloten kaarten meer voor zich heeft liggen.
+
+        Parameters:
+        player (Player): controleert of de hand van de speler leeg is
+
+        Return:
+        True / False (boolean): Heeft de speler gewonnen of niet.?
+
+        
+        
+        """
         return all(len(cards) == 0 for cards in [player.hand_cards, player.displayed_cards, player.hidden_cards])
         
     def possible_moves(self, player):
+        """
+        Geeft aan welke zetten de speler kan doen. Eerst moet de speler al zijn kaarten uitspelen, daarna de kaarten die open liggen en daarna de
+        kaarten die gesloten liggen. Ook kan een speler altijd voor "take" kiezen, wat inhoudt dat de speler een kaart van de aftrekstapel mag pakken.
+
+        Parameters:
+        player (Player): Om te controleren of de speler nog kaarten in zijn hand heeft. 
+
+        Return:
+        playable_cards: De speelbare kaarten in de hand van de speler plus de optie voor "take". 
+        origin (str): Of de kaart uit de hand kwam, van de open kaarten of van de gesloten kaarten.
+
+        """
         if len(player.hand_cards) > 0:
             available_cards = player.hand_cards
             origin = "hand"
@@ -139,6 +227,16 @@ class ZweedsPesten():
         return playable_cards, origin
 
     def possible_available_cards(self, player):
+        """
+        Geeft de kaarten aan die een speler ter beschikking eheft.
+
+        Parameter:
+        player (Player): om te kijken of een speler nog kaarten heeft.
+
+        Return:
+        available_cards (list): De kaarten in de hand van de speler.
+        origin (str): Waar de kaarten vandaan kwamen (hand of open kaart)
+        """
         if len(player.hand_cards) > 0:
             available_cards = player.hand_cards
             origin = "hand"
@@ -150,9 +248,26 @@ class ZweedsPesten():
         return available_cards, origin
     
     def filter_list(self, lst, x):
+        """
+        Kijkt of een kaart het cijfer / het plaatje heeft dat is opgegeven bij x. 
+
+        Parameter
+        lst (list): Lijst van kaarten in gewoon formaat (<kleur><waarde>)
+        x (str): De naam van een plaatje (J/Q/K/A) of een cijfer (2 tot en met 9)
+        
+        return:
+        (list): Lijst met kaarten die voldoen aan waarde x.
+        
+        """
+
         return [item for item in lst if x in item[1:]]
     
     def check_4(self):
+        """
+        Kijkt of er sprake is van vier dezelfde plaatjes / cijfers achterelkaar op de oplegstapel. Een tien die ertussen is gekomen
+        telt niet mee. 
+        """
+        
         lst = [x[1:] for x in self.stack_of_cards[-4:]]
 
         if len(set(lst)) == 1:
@@ -171,7 +286,7 @@ class ZweedsPesten():
     
     def game_loop(self, verbose=1):
         """
-        Runs a single game of Zweeds Pesten.
+        Runt een ronde Zweeds Pesten, waarbij alle fases van het spel, de beurten van de spelers en speciale effecten van kaarten voorbijkomen.
         
         verbosity:
             0 - Silent (no prints)
@@ -324,6 +439,15 @@ class ZweedsPesten():
             print("\nGame over! Winners in order:", self.winners)
 
     def simulate_games(self, sims, verbose=0):
+        """
+        Deze code simuleert meerdere potjes Zweeds Pesten voor alle mogelijke volgordes van spelers, houdt bij wie er wint en laat uiteindelijk de volgorde  
+        waarin de spelers het potje hebben gespeeld en de resultaten bij in self.placements (dict).
+
+        Parameters:
+        sims (int): Aantal simulatierondes
+        verbose = 0 (int): Er wordt niks geprint
+
+        """
         self.placements = {}
 
         player_names = [player.name for player in self.players]
@@ -344,6 +468,14 @@ class ZweedsPesten():
         self.display_points(self.placements)
 
     def display_points(self, placements):
+        """
+        Berekent de totale scores, toont hoe vaak ze in de top 3 zijn gekomen en visualiseert de resultaten door middel van een staafdiagram.
+
+        Parameters:
+        placements (dict): Dictionary met game-uitslagen in vorm {"Game X (Order:...)": [winnaar1, winnaar2,...]}
+
+
+        """
         data = pd.DataFrame(placements).T
 
         player_scores = {}
