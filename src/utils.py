@@ -8,7 +8,9 @@ card game naar een python based simulatie.
 import random
 import matplotlib.pyplot as plt
 import pandas as pd
+from itertools import permutations
 from main import Player, Tim, Low
+
 
 CARD_VALUES = {
                 "2": "two",
@@ -300,15 +302,24 @@ class ZweedsPesten():
         if verbose >= 1:
             print("\nGame over! Winners in order:", self.winners)
 
-    
+
     def simulate_games(self, sims, verbose=0):
         self.placements = {}
-        for i in range(sims):
-            self.game_loop(verbose=verbose)
-            self.placements[f"Game {i + 1}"] = self.winners
-            if verbose >= 1:
-                print("Game:", i)
-        
+
+        player_names = [player.name for player in self.players]
+        all_permutations = list(permutations(player_names))  # Alle permutaties genereren
+
+        for perm in all_permutations:
+            print(f"\nSimulating with player order: {perm}")  # Optioneel, voor debugging
+
+            for i in range(sims):
+                # Maak een nieuwe game met deze permutatie van spelers
+                self.players = [self.get_player_instance(name) for name in perm]
+                self.game_loop(verbose=verbose)
+                self.placements[f"Game {i + 1} (Order: {perm})"] = self.winners
+                if verbose >= 1:
+                    print("Game:", i)
+
         self.display_points(self.placements)
 
     def display_points(self, placements):
