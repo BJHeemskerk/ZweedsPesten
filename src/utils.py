@@ -9,7 +9,9 @@ import random
 import matplotlib.pyplot as plt
 import pandas as pd
 from itertools import permutations
-from main import Player, Tim, Low, Jasper
+
+from main import Player, Tim, Low, Jasper, Busse
+
 
 
 CARD_VALUES = {
@@ -32,10 +34,12 @@ CARD_VALUES = {
 class ZweedsPesten():
     def __init__(self, players):
         player_types = {
-        #    "busse": Busse,
-        "tim": Tim,
-        "low": Low,
-        "jasper" : Jasper
+
+            "busse": Busse,
+            "tim": Tim,
+            "low": Low,
+            "jasper" : Jasper
+
         }
 
         self.players = [player_types.get(name, Player)(name) for name in players]
@@ -46,7 +50,9 @@ class ZweedsPesten():
         self.score_map = {0: 3, 1: 2, 2: 1}
 
     def get_player_instance(self, name):
+
         player_types = {"tim": Tim, "low": Low, "jasper" : Jasper}
+
         return player_types.get(name, Player)(name)
 
     def create_deck(self):
@@ -172,6 +178,7 @@ class ZweedsPesten():
             2 - Full verbose (detailed game state)
         """
         game_phase = "choose_display_cards"
+        turn_timer = 0
         self.winners = []
 
         self.deck = self.create_deck()
@@ -192,121 +199,128 @@ class ZweedsPesten():
                 print(f"Displayed:  {player.displayed_cards}")
                 print(f"Hidden:     {player.hidden_cards}")
                 print("-----------------------------------------")
-
+        len_game = 0
         while len(self.winners) + 1 < len(self.players):
-            for player in self.players:
-                if self.check_win(player):
-                    if player.name not in self.winners:
+            while len_game != 250:
+                for player in self.players:
+                    if self.check_win(player):
+                        if player.name not in self.winners:
+                            if verbose >= 1:
+                                print(f"\n{player.name} has won the game!")
+                            self.winners.append(player.name)
+                            break
+                        continue
+
+                    if len(self.winners) + 1 == len(self.players):
+
                         if verbose >= 1:
-                            print(f"\n{player.name} has won the game!")
-                        self.winners.append(player.name)
+                            print(f"\n{player.name} is the last remaining player. No further turns needed.")
                         break
-                    continue
 
-                if len(self.winners) + 1 == len(self.players):
-                    if verbose >= 1:
-                        print(f"\n{player.name} is the last remaining player. No further turns needed.")
-                    break
+                    game_phase = "main"
+                    playable_cards, origin = self.possible_moves(player)
 
-                game_phase = "main"
-                playable_cards, origin = self.possible_moves(player)
-
-                if verbose == 2:
-                    print(f"\n{player.name}'s turn")
-                    print(f"Top of stack:   {self.stack_of_cards[-1] if self.stack_of_cards else 'Empty'}")
-                    print(f"Hand:       {player.hand_cards}")
-                    print(f"Displayed:  {player.displayed_cards}")
-                    print(f"Hidden:     {player.hidden_cards}")
-
-                    print(f"\nPlayable cards: {playable_cards}")
-
-                move = player.play_move(game_phase, playable_cards, self.stack_of_cards)
-
-                if move == "take":
                     if verbose == 2:
-                        print(f"{player.name} takes the stack ({len(self.stack_of_cards)} cards).")
-                    player.hand_cards.extend(self.stack_of_cards)
-                    self.stack_of_cards.clear()
-                else:
-                    if verbose == 2:
-                        print(f"{player.name} plays {move} from {origin}.")
-                    self.stack_of_cards.append(move)
-                    player.remove_card(move, origin)
+                        print(f"\n{player.name}'s turn")
+                        print(f"Top of stack:   {self.stack_of_cards[-1] if self.stack_of_cards else 'Empty'}")
+                        print(f"Hand:       {player.hand_cards}")
+                        print(f"Displayed:  {player.displayed_cards}")
+                        print(f"Hidden:     {player.hidden_cards}")
 
-                special_cards_repeat = True
-                while special_cards_repeat and not self.check_win(player):
-                    special_cards_repeat = False
+                        print(f"\nPlayable cards: {playable_cards}")
 
-                    if move[1:] == "3":
-                        self.stack_of_cards.clear()
+                    move = player.play_move(game_phase, playable_cards, self.stack_of_cards)
+
+                    if move == "take":
                         if verbose == 2:
-                            print(f"{player.name} played a 3 - Stack cleared!")
-                        if not self.check_win(player):
+                            print(f"{player.name} takes the stack ({len(self.stack_of_cards)} cards).")
+                        player.hand_cards.extend(self.stack_of_cards)
+                        self.stack_of_cards.clear()
+                    else:
+                        if verbose == 2:
+                            print(f"{player.name} plays {move} from {origin}.")
+                        self.stack_of_cards.append(move)
+                        player.remove_card(move, origin)
+
+                    special_cards_repeat = True
+                    while special_cards_repeat and not self.check_win(player):
+                        special_cards_repeat = False
+
+                        if move[1:] == "3":
+                            self.stack_of_cards.clear()
+                            if verbose == 2:
+                                print(f"{player.name} played a 3 - Stack cleared!")
+                            if not self.check_win(player):
+                                special_cards_repeat = True
+                                game_phase = "free_card"
+                                playable_cards, origin = self.possible_moves(player)
+                                if verbose == 2:
+                                    print(f"Top of stack:   {self.stack_of_cards[-1] if self.stack_of_cards else 'Empty'}")
+                                    print(f"Playable cards: {playable_cards}")
+                                move = player.play_move(game_phase, playable_cards, self.stack_of_cards)
+                                self.stack_of_cards.append(move)
+                                player.remove_card(move, origin)
+
+                        if len(player.hand_cards) + len(player.displayed_cards) > 0:
+                            available_cards, origin = self.possible_available_cards(player)
+                            card_values = [card[1:] for card in available_cards]
+
+                            if move[1:] in card_values:
+                                special_cards_repeat = True
+                                while move[1:] in card_values and len(player.hand_cards) + len(player.displayed_cards) > 0 and not self.check_win(player):
+                                    playable_cards = self.filter_list(available_cards, move[1:])
+                                    playable_cards.append("skip")
+
+                                    if verbose == 2:
+                                        print(f"{player.name} can play a double card ({move[1:]}).")
+
+                                    game_phase = "double_card"
+                                    move = player.play_move(game_phase, playable_cards, self.stack_of_cards)
+
+                                    if move == "skip":
+                                        if verbose == 2:
+                                            print(f"{player.name} skipped playing a double card.")
+                                        break
+                                    else:
+                                        if verbose == 2:
+                                            print(f"{player.name} plays {move} from {origin}.")
+                                        self.stack_of_cards.append(move)
+                                        player.remove_card(move, origin)
+
+                                        if len(player.hand_cards) + len(player.displayed_cards) > 0:
+                                            available_cards, origin = self.possible_available_cards(player)
+                                            card_values = [card[1:] for card in available_cards]
+
+                        if self.check_4():
                             special_cards_repeat = True
+                            self.stack_of_cards.clear()
+                            if verbose == 2:
+                                print(f"Four of a kind detected - Stack cleared!")
                             game_phase = "free_card"
                             playable_cards, origin = self.possible_moves(player)
-                            if verbose == 2:
-                                print(f"Top of stack:   {self.stack_of_cards[-1] if self.stack_of_cards else 'Empty'}")
-                                print(f"Playable cards: {playable_cards}")
                             move = player.play_move(game_phase, playable_cards, self.stack_of_cards)
                             self.stack_of_cards.append(move)
                             player.remove_card(move, origin)
 
-                    if len(player.hand_cards) + len(player.displayed_cards) > 0:
-                        available_cards, origin = self.possible_available_cards(player)
-                        card_values = [card[1:] for card in available_cards]
+                        while len(player.hand_cards) < 3 and len(self.deck) > 0:
+                            drawn_card = self.deck.pop()
+                            player.hand_cards.append(drawn_card)
+                            if verbose == 2:
+                                print(f"{player.name} draws a card: {drawn_card}")
 
-                        if move[1:] in card_values:
-                            special_cards_repeat = True
-                            while move[1:] in card_values and len(player.hand_cards) + len(player.displayed_cards) > 0 and not self.check_win(player):
-                                playable_cards = self.filter_list(available_cards, move[1:])
-                                playable_cards.append("skip")
+                    if self.check_win(player):
+                        if verbose >= 1:
+                            print(f"{player.name} has won the game!")
+                        self.winners.append(player.name)
 
-                                if verbose == 2:
-                                    print(f"{player.name} can play a double card ({move[1:]}).")
-
-                                game_phase = "double_card"
-                                move = player.play_move(game_phase, playable_cards, self.stack_of_cards)
-
-                                if move == "skip":
-                                    if verbose == 2:
-                                        print(f"{player.name} skipped playing a double card.")
-                                    break
-                                else:
-                                    if verbose == 2:
-                                        print(f"{player.name} plays {move} from {origin}.")
-                                    self.stack_of_cards.append(move)
-                                    player.remove_card(move, origin)
-
-                                    if len(player.hand_cards) + len(player.displayed_cards) > 0:
-                                        available_cards, origin = self.possible_available_cards(player)
-                                        card_values = [card[1:] for card in available_cards]
-
-                    if self.check_4():
-                        special_cards_repeat = True
-                        self.stack_of_cards.clear()
-                        if verbose == 2:
-                            print(f"Four of a kind detected - Stack cleared!")
-                        game_phase = "free_card"
-                        playable_cards, origin = self.possible_moves(player)
-                        move = player.play_move(game_phase, playable_cards, self.stack_of_cards)
-                        self.stack_of_cards.append(move)
-                        player.remove_card(move, origin)
-
-                    while len(player.hand_cards) < 3 and len(self.deck) > 0:
-                        drawn_card = self.deck.pop()
-                        player.hand_cards.append(drawn_card)
-                        if verbose == 2:
-                            print(f"{player.name} draws a card: {drawn_card}")
-
-                if self.check_win(player):
-                    if verbose >= 1:
-                        print(f"{player.name} has won the game!")
-                    self.winners.append(player.name)
+                len_game += 1
+            if len_game == 250:
+                while len(self.winners) < 3:
+                    self.winners.append(None)
+                break
 
         if verbose >= 1:
             print("\nGame over! Winners in order:", self.winners)
-
 
     def simulate_games(self, sims, verbose=0):
         self.placements = {}
@@ -315,7 +329,8 @@ class ZweedsPesten():
         all_permutations = list(permutations(player_names))  # Alle permutaties genereren
 
         for perm in all_permutations:
-            print(f"\nSimulating with player order: {perm}")  # Optioneel, voor debugging
+            if verbose >= 2:
+                print(f"\nSimulating with player order: {perm}")  
 
             for i in range(sims):
                 # Maak een nieuwe game met deze permutatie van spelers
@@ -336,7 +351,7 @@ class ZweedsPesten():
             for position, player in enumerate(game_results):
                 player_scores[player] = player_scores.get(player, 0) + self.score_map[position]
 
-        self.points = pd.Series(player_scores).sort_values(ascending=False)
+        self.points = pd.Series(player_scores).dropna().sort_values(ascending=False)
 
         count_placements = {
                     "1st" : data[0].value_counts(),
@@ -355,7 +370,9 @@ class ZweedsPesten():
 
         ax2 = ax1.twinx()
 
-        self.medals.loc[self.points.index].plot(kind="bar", ax=ax2, width=0.3, color=["gold", "silver", "brown"])
+        valid_players = [p for p in self.points.index if p in self.medals.index and p is not None]
+
+        self.medals.loc[valid_players].plot(kind="bar", ax=ax2, width=0.3, color=["gold", "silver", "brown"])
         ax2.set_ylabel("Number of Times in Position", color="black")
         ax2.tick_params(axis="y", labelcolor="black")
 
