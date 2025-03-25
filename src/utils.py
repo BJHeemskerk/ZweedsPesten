@@ -9,7 +9,9 @@ import random
 import matplotlib.pyplot as plt
 import pandas as pd
 from itertools import permutations
-from main import Player, Tim, Low, Busse
+
+from main import Player, Tim, Low, Jasper, Busse
+
 
 
 CARD_VALUES = {
@@ -32,9 +34,12 @@ CARD_VALUES = {
 class ZweedsPesten():
     def __init__(self, players):
         player_types = {
+
             "busse": Busse,
             "tim": Tim,
-            "low": Low
+            "low": Low,
+            "jasper" : Jasper
+
         }
 
         self.players = [player_types.get(name, Player)(name) for name in players]
@@ -45,7 +50,9 @@ class ZweedsPesten():
         self.score_map = {0: 3, 1: 2, 2: 1}
 
     def get_player_instance(self, name):
-        player_types = {"tim": Tim, "low": Low}
+
+        player_types = {"tim": Tim, "low": Low, "jasper" : Jasper}
+
         return player_types.get(name, Player)(name)
 
     def create_deck(self):
