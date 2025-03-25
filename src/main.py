@@ -66,13 +66,35 @@ class Busse(Player):
     kaarten als de 2, 3 en 10 over hoge kaarten.
     """
     def select_card(self, hand, game_phase):
+        """
+        Een functie die de strategie van Busse behandelt.
+
+        Params:
+        ----------
+        hand : list
+            De kaarten die valide zijn om te spelen
+        
+        game_phase : str
+            De huidige fase van de game
+
+        Returns:
+        ----------
+        move : str
+            Een string die de kaart(en) bevat die gespeeld
+            gaan worden op basis van de strategie
+        """
+        # De speciale kaarten die altijd speelbaar zijn
         special_cards = ["10", "2", "3"]
 
+        # Strippen van de opties om de kaart waarden en suits uit elkaar te halen
         hand_stripped = [(card[0], card[1:]) for card in hand if card not in {"take", "skip"}]
 
+        # List comprehension om speciale kaarten van normale kaarten te scheiden
         special = [card for card in hand_stripped if card[1] in special_cards]
         normal = [card for card in hand_stripped if card[1] not in special_cards]
 
+        # Game Phase: Display Cards
+        # Kiest de drie beste kaarten als display (speciale kaarten eerst)
         if game_phase == "choose_display_cards":
             amount_chosen = 0
             chosen_display_cards = []
@@ -97,12 +119,14 @@ class Busse(Player):
                 amount_chosen += 1
             return chosen_display_cards
 
+        # Behandelen van skip en take indien dit de enige opties zijn
         if not special and not normal:
             if "skip" in hand:
                 return "skip"
             else:
                 return "take"
 
+        # Behandeld de normale kaarten logic (hoogste kaart pakken)
         if normal:
             lowest_normal = min(
                 normal,
@@ -110,14 +134,36 @@ class Busse(Player):
             )
             return "".join(lowest_normal)
 
+        # Behandeld de speciale kaarten logic (eerst 10, dan 2 en 3 als laatste)
         return "".join(
             min(special, key=lambda card: special_cards.index(card[1]))
         )
 
     def play_move(self, game_phase, playable_cards, stack_of_cards):
+        """
+        Speelt de move gebaseerd op de game phase en strategie
+
+        Params:
+        ----------
+        game_phase : str
+            Een string die de game phase omschrijft
+        
+        playable_cards : list
+            Een list die de legale moves bevat
+        
+        Stack_of_cards : list
+            Lijst met de kaarten die op de stapel liggen,
+            ongebruikt in deze strategie
+
+        Returns:
+        ----------
+        De move die gespeeld wordt door de speler
+        """
+        # Behandel game phase display cards
         if game_phase == "choose_display_cards":
             return self.select_card(playable_cards, game_phase)
         else:
+            # Behandel take action en normale zetten
             if "take" in playable_cards and len(playable_cards) > 1:
                 playable_cards.remove("take")
 
