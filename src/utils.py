@@ -8,7 +8,9 @@ card game naar een python based simulatie.
 import random
 import matplotlib.pyplot as plt
 import pandas as pd
-from main import Player, Busse
+from itertools import permutations
+from main import Player, Tim, Low, Busse
+
 
 CARD_VALUES = {
                 "2": "two",
@@ -31,6 +33,8 @@ class ZweedsPesten():
     def __init__(self, players):
         player_types = {
             "busse": Busse,
+            "tim": Tim,
+            "low": Low
         }
 
         self.players = [player_types.get(name, Player)(name) for name in players]
@@ -39,6 +43,10 @@ class ZweedsPesten():
         self.placements = {}
 
         self.score_map = {0: 3, 1: 2, 2: 1}
+
+    def get_player_instance(self, name):
+        player_types = {"tim": Tim, "low": Low}
+        return player_types.get(name, Player)(name)
 
     def create_deck(self):
         ranks = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"]
@@ -163,6 +171,7 @@ class ZweedsPesten():
             2 - Full verbose (detailed game state)
         """
         game_phase = "choose_display_cards"
+        turn_timer = 0
         self.winners = []
 
         self.deck = self.create_deck()
@@ -196,6 +205,7 @@ class ZweedsPesten():
                         continue
 
                     if len(self.winners) + 1 == len(self.players):
+
                         if verbose >= 1:
                             print(f"\n{player.name} is the last remaining player. No further turns needed.")
                         break
@@ -307,11 +317,21 @@ class ZweedsPesten():
 
     def simulate_games(self, sims, verbose=0):
         self.placements = {}
-        for i in range(sims):
-            self.game_loop(verbose=verbose)
-            self.placements[f"Game {i + 1}"] = self.winners
-            if verbose >= 1:
-                print("Game:", i)
+
+        player_names = [player.name for player in self.players]
+        all_permutations = list(permutations(player_names))  # Alle permutaties genereren
+
+        for perm in all_permutations:
+            if verbose >= 2:
+                print(f"\nSimulating with player order: {perm}")  
+
+            for i in range(sims):
+                # Maak een nieuwe game met deze permutatie van spelers
+                self.players = [self.get_player_instance(name) for name in perm]
+                self.game_loop(verbose=verbose)
+                self.placements[f"Game {i + 1} (Order: {perm})"] = self.winners
+                if verbose >= 1:
+                    print("Game:", i)
 
         self.display_points(self.placements)
 
