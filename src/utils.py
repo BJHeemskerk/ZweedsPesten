@@ -8,9 +8,13 @@ card game naar een python based simulatie.
 import random
 import matplotlib.pyplot as plt
 import pandas as pd
-from itertools import permutations
-
-from main import Player, Tim, Low, Jasper, Busse, Justice_and_Terror
+from itertools import combinations, permutations
+from IPython.display import display
+import numpy as np
+import seaborn as sns
+from collections import defaultdict
+import matplotlib.colors as mcolors
+from main import Player, Tim, Low, Jasper, Busse, Justice_and_Terror, Natasja
 
 
 
@@ -64,7 +68,8 @@ class ZweedsPesten():
             "tim": Tim,
             "low": Low,
             "jasper" : Jasper,
-            "justice_and_terror": Justice_and_Terror
+            "justice_and_terror": Justice_and_Terror,
+            "natasja": Natasja
 
         }
 
@@ -119,8 +124,8 @@ class ZweedsPesten():
         if deck:
             hand.append(deck.pop())
 
-    def starting_hand(self):
-        for player in self.players:
+    def starting_hand(self, selected_players):
+        for player in selected_players:
             for _ in range(3):
                 self.draw_card(self.deck, player.hidden_cards)
             for _ in range(6):
@@ -293,15 +298,20 @@ class ZweedsPesten():
             1 - Winners only
             2 - Full verbose (detailed game state)
         """
+        if len(self.players) > 4:
+            selected_players = self.players[:4]
+        else:
+            selected_players = self.players
+
         game_phase = "choose_display_cards"
         turn_timer = 0
         self.winners = []
 
         self.deck = self.create_deck()
         random.shuffle(self.deck)
-        self.starting_hand()
+        self.starting_hand(selected_players)
 
-        for player in self.players:
+        for player in selected_players:
             playable_cards = player.hand_cards
             player.displayed_cards = player.play_move(game_phase, playable_cards,self.stack_of_cards)
             for card in player.displayed_cards:
@@ -309,16 +319,16 @@ class ZweedsPesten():
 
         if verbose == 2:
             print("\n------------ Starting Game ------------")
-            for player in self.players:
+            for player in selected_players:
                 print(f"{player.name}:")
                 print(f"Hand:       {player.hand_cards}")
                 print(f"Displayed:  {player.displayed_cards}")
                 print(f"Hidden:     {player.hidden_cards}")
                 print("-----------------------------------------")
         len_game = 0
-        while len(self.winners) + 1 < len(self.players):
+        while len(self.winners) + 1 < len(selected_players):
             while len_game != 250:
-                for player in self.players:
+                for player in selected_players:
                     if self.check_win(player):
                         if player.name not in self.winners:
                             if verbose >= 1:
@@ -327,7 +337,7 @@ class ZweedsPesten():
                             break
                         continue
 
-                    if len(self.winners) + 1 == len(self.players):
+                    if len(self.winners) + 1 == len(selected_players):
 
                         if verbose >= 1:
                             print(f"\n{player.name} is the last remaining player. No further turns needed.")
@@ -450,8 +460,25 @@ class ZweedsPesten():
         """
         self.placements = {}
 
+        # Maken van de tabel
+        self.performance_data = pd.DataFrame(
+            index=[
+                player.name for player in self.players
+            ]
+        )
+        self.performance_data["Aantal Games"] = {player: 0 for player in self.performance_data.index}
+
+        # Maken van alle namen combinaties
         player_names = [player.name for player in self.players]
-        all_permutations = list(permutations(player_names))  # Alle permutaties genereren
+        group_combinations = list(combinations(player_names, 4))
+
+        # Maken van permutaties van elke combinatie
+        all_permutations = []
+        for group in group_combinations:
+            all_permutations.extend(permutations(group))
+
+        # Maken van dict voor berekening dominantie
+        self.dominance_data = {}
 
         for perm in all_permutations:
             if verbose >= 2:
@@ -462,43 +489,45 @@ class ZweedsPesten():
                 self.players = [self.get_player_instance(name) for name in perm]
                 self.game_loop(verbose=verbose)
                 self.placements[f"Game {i + 1} (Order: {perm})"] = self.winners
+
+                # Ophalen van de beste speler bij elke permutatie
+                if perm not in self.dominance_data:
+                    self.dominance_data[perm] = []
+                self.dominance_data[perm].append(self.winners[0])
+
+                # Optellen aantal games per speler
+                for player_name in perm:
+                    self.performance_data.loc[player_name, "Aantal Games"] += 1
+
                 if verbose >= 1:
                     print("Game:", i)
 
-        self.display_points(self.placements)
+        # Uitprinten en tonen resultaten
+        print("Algemene performance in nummers:")
+        display(self.performance_table(self.placements))
 
-    def display_points(self, placements):
+        print("Overwinningen vanaf verschillende startplekken:")
+        self.wins_per_start()
+        plt.show()
+
+        print("Punten en Podium verdeling:")
+        self.display_points()
+        plt.show()
+
+        print("Performance per speler per combinatie van spelers:")
+        self.combination_results()
+        plt.show()
+
+    def display_points(self):
         """
         Berekent de totale scores, toont hoe vaak ze in de top 3 zijn gekomen en visualiseert de resultaten door middel van een staafdiagram.
-
-        Parameters:
-        placements (dict): Dictionary met game-uitslagen in vorm {"Game X (Order:...)": [winnaar1, winnaar2,...]}
-
-
         """
-        data = pd.DataFrame(placements).T
-
-        player_scores = {}
-
-        for _, game_results in data.iterrows():
-            for position, player in enumerate(game_results):
-                player_scores[player] = player_scores.get(player, 0) + self.score_map[position]
-
-        self.points = pd.Series(player_scores).dropna().sort_values(ascending=False)
-
-        count_placements = {
-                    "1st" : data[0].value_counts(),
-                    "2nd" : data[1].value_counts(),
-                    "3rd" : data[2].value_counts()
-                }
-
-        self.medals = pd.DataFrame(count_placements).fillna(0)
-
-        fig, ax1 = plt.subplots(figsize=(10, 6))
+        fig, ax1 = plt.subplots(figsize=(25, 6))
 
         self.points.plot(kind="bar", color="black", alpha=0.6)
-        ax1.set_xlabel("Players", rotation=90)
-        ax1.set_ylabel("Total Score", color="blue")
+        ax1.set_xlabel("Players")
+        ax1.tick_params(axis="x", rotation=0)
+        ax1.set_ylabel("Totale Punten (zwarte bar)", color="blue")
         ax1.tick_params(axis="y", labelcolor="blue")
 
         ax2 = ax1.twinx()
@@ -506,11 +535,286 @@ class ZweedsPesten():
         valid_players = [p for p in self.points.index if p in self.medals.index and p is not None]
 
         self.medals.loc[valid_players].plot(kind="bar", ax=ax2, width=0.3, color=["gold", "silver", "brown"])
-        ax2.set_ylabel("Number of Times in Position", color="black")
+        ax2.set_ylabel("Aantal keren 1st/2nd/3rd (goud/zilver/brons)", color="black")
         ax2.tick_params(axis="y", labelcolor="black")
 
-        plt.title("Total Points & Medals Breakdown")
+        plt.title("Totale punten en podiums")
 
         ax2.get_legend().remove()
+        
+    def performance_table(self, placements):
+        """
+        Deze method toont de performance van elke speler op basis van meerdere
+        statistieken en zorgt voor een numeriek overzicht van de performance.
+        
+        Parameters:
+        placements (dict): Dictionary met game-uitslagen in vorm {"Game X (Order:...)": [winnaar1, winnaar2,...]}
+        """
+        # Aanmaken dataframe op basis van placements
+        data = pd.DataFrame(placements).T
 
-        plt.show()
+        # Aanmaken player scores dict
+        player_scores = {}
+
+        # Vullen van de player scores
+        for _, game_results in data.iterrows():
+            for position, player in enumerate(game_results):
+                player_scores[player] = player_scores.get(player, 0) + self.score_map[position]
+
+        # Toewijzen van de punten aan een pandas Series
+        self.points = pd.Series(
+                            {
+                                k: v
+                                for k, v
+                                in player_scores.items()
+                                if k is not None
+                            }
+                        ).dropna().sort_values(ascending=False)
+
+        # Optellen van 1ste, 2de en 3de plekken
+        count_placements = {
+                    "1st" : data[0].value_counts(),
+                    "2nd" : data[1].value_counts(),
+                    "3rd" : data[2].value_counts()
+                }
+
+        # Telling als dataframe opstellen
+        self.medals = pd.DataFrame(count_placements).fillna(0)
+
+        # Tonen totaal aantal punten
+        self.performance_data["Aantal Punten"] = [
+            self.points[player]
+            for player in self.performance_data.index
+        ]
+
+        # Performance metric (lager is beter)
+        self.performance_data["Performance Score"] = [
+            round(np.std([
+                10 * int(self.medals.loc[player, "1st"]),
+                7 * int(self.medals.loc[player, "2nd"]),
+                4 * int(self.medals.loc[player, "3rd"]),
+                1 * (
+                    self.performance_data.loc[player, "Aantal Games"] -
+                    int(self.medals.loc[player, "1st"]) -
+                    int(self.medals.loc[player, "2nd"]) -
+                    int(self.medals.loc[player, "3rd"])
+                    )
+                ]),
+                2
+            )
+            for player in self.performance_data.index
+        ]
+
+        # Aantal keren eerste
+        self.performance_data["1st"] = [
+            int(self.medals.loc[player, "1st"])
+            for player in self.performance_data.index
+        ]
+
+        # Aantal keren tweede
+        self.performance_data["2nd"] = [
+            int(self.medals.loc[player, "2nd"])
+            for player in self.performance_data.index
+        ]
+
+        # Aantal keren derde
+        self.performance_data["3rd"] = [
+            int(self.medals.loc[player, "3rd"])
+            for player in self.performance_data.index
+        ]
+
+        # Aantal keren laatste / niet geëindigd
+        self.performance_data["DNF"] = [
+            self.performance_data.loc[player, "Aantal Games"] -
+            self.performance_data.loc[player, "1st"] -
+            self.performance_data.loc[player, "2nd"] -
+            self.performance_data.loc[player, "3rd"]
+            for player in self.performance_data.index
+        ]
+        
+        # Berekenen de ratio eerste plekken
+        self.performance_data["1st Ratio"] = [
+            str(
+                round(
+                    self.performance_data.loc[player, "1st"] /
+                    self.performance_data.loc[player, "Aantal Games"] *
+                    100,
+                    2
+                    )
+                ) + "%"
+            for player in self.performance_data.index
+        ]
+
+        # Berekenen de ratio tweede plekken
+        self.performance_data["2nd Ratio"] = [
+            str(
+                round(
+                    self.performance_data.loc[player, "2nd"] /
+                    self.performance_data.loc[player, "Aantal Games"] *
+                    100,
+                    2
+                    )
+                ) + "%"
+            for player in self.performance_data.index
+        ]
+
+        # Berekenen de ratio derde plekken
+        self.performance_data["3rd Ratio"] = [
+            str(
+                round(
+                    self.performance_data.loc[player, "3rd"] /
+                    self.performance_data.loc[player, "Aantal Games"] *
+                    100,
+                    2
+                    )
+                ) + "%"
+            for player in self.performance_data.index
+        ]
+
+        # Berekenen DNF ratio
+        self.performance_data["DNF Ratio"] = [
+            str(
+                round(
+                    self.performance_data.loc[player, "DNF"] /
+                    self.performance_data.loc[player, "Aantal Games"] *
+                    100,
+                    2
+                    )
+                ) + "%"
+            for player in self.performance_data.index
+        ]
+
+        # Gemiddelde eindpositie
+        self.performance_data["Gem Eindpositie"] = [
+            round(
+                (
+                    1 * self.performance_data.loc[player, "1st"] +
+                    2 * self.performance_data.loc[player, "2nd"] +
+                    3 * self.performance_data.loc[player, "3rd"] +
+                    4 * self.performance_data.loc[player, "DNF"]
+                ) / self.performance_data.loc[player, "Aantal Games"],
+                2
+            )
+            for player in self.performance_data.index
+        ]
+
+        # Gemiddelde punten per game
+        self.performance_data["Gem punten per game"] = [
+            round(
+                self.performance_data.loc[player, "Aantal Punten"] /
+                self.performance_data.loc[player, "Aantal Games"],
+                2
+            )
+            for player in self.performance_data.index
+        ]
+
+        return self.performance_data
+    
+    def combination_results(self):
+        """
+        Deze functie berekent en toont de winpercentages en aantal overwinningen
+        van spelers per combinatie van spelers.
+
+        Het maakt gebruik van twee heatmaps om de resultaten visueel weer te geven:
+        1. Winpercentages per combinatie van spelers.
+        2. Overwinningen per combinatie van spelers.
+        """
+        # Normaliseren van de combinaties van spelers (volgorde maakt niet uit)
+        normalized_data = defaultdict(list)
+        for comb, winners in self.dominance_data.items():
+            sorted_comb = tuple(sorted(comb))
+            normalized_data[sorted_comb].extend(winners)
+
+        # Aantal overwinningen per speler per unieke combinatie
+        players = set(player for comb in normalized_data.keys() for player in comb)
+        win_counts = {comb: {player: 0 for player in players} for comb in normalized_data.keys()}
+
+        for comb, winners in normalized_data.items():
+            for winner in winners:
+                if winner is not None:
+                    win_counts[comb][winner] += 1
+
+        # Winpercentages berekenen
+        percentages = {}
+        for comb, counts in win_counts.items():
+            total_games = sum(counts.values())
+            percentages[comb] = {player: (count / total_games) * 100 for player, count in counts.items()}
+
+        # Zet winpercentages om naar DataFrame
+        percent_df = pd.DataFrame(percentages).T.fillna(0)
+
+        # Zet overwinningen on naar DataFrame
+        win_df = pd.DataFrame(win_counts).T.fillna(0)
+
+        # Versimpelen as-labels combinaties
+        comb_labels = {comb: f"C{i+1}" for i, comb in enumerate(percent_df.index)}
+        percent_df.index = [comb_labels[comb] for comb in percent_df.index]
+        win_df.index = [comb_labels[comb] for comb in win_df.index]
+
+        # Color map voor duidelijkheid
+        cmap = mcolors.LinearSegmentedColormap.from_list(
+            "black_red_green",
+                [
+                    (0, 'black'),
+                    (0.1 * 10 ** -1000000000000, 'lightblue'),
+                    (1, 'orange')
+                ]
+            )
+
+        # PLotten van de heatmaps op 1 subplot
+        fig, axes = plt.subplots(1, 2, figsize=(25, 8))
+
+        # Eerste heatmap: Winpercentages
+        sns.heatmap(percent_df, annot=True, cmap=cmap, cbar_kws={'label': 'Win Percentage (%)'}, annot_kws={"color": "black", "size": 12}, fmt='.2f', ax=axes[0])
+        axes[0].set_title('Winstpercentage per player per combinatie', fontsize=16)
+        axes[0].set_xlabel('Players', fontsize=14)
+        axes[0].set_ylabel('Combination', fontsize=14)
+
+        # Tweede heatmap: Overwinningen
+        sns.heatmap(win_df, annot=True, cmap=cmap, cbar_kws={'label': 'Win Count'}, annot_kws={"color": "black", "size": 12}, fmt='g', ax=axes[1])
+        axes[1].set_title('Overwinningen per player per combinatie', fontsize=16)
+        axes[1].set_xlabel('Players', fontsize=14)
+
+        # Aanpassen layout en y-as labels rechter heatmap
+        axes[1].set_ylabel('') 
+        axes[1].set_yticks([])
+        axes[0].set_yticklabels(axes[0].get_yticklabels(), rotation=0, fontsize=12)
+        plt.tight_layout()
+
+        # Legenda combinaties (y-as) toevoegen
+        fig.text(1, 1, "Combination Key Mapping:", fontsize=14, verticalalignment='top')
+        for i, (comb, label) in enumerate(comb_labels.items()):
+            fig.text(1, 0.97 - (i + 1) * 0.04, f"{label}: {comb}", fontsize=12)
+
+    def wins_per_start(self):
+        """
+        Deze functie maakt een staafdiagram dat het aantal overwinningen per speler per startplek toont. 
+        De startplek wordt bepaald door de volgorde van de spelers in de key van de 'dominance_data'.
+        """
+        # Bijhouden winst per startplek
+        win_counts_per_start = defaultdict(lambda: defaultdict(int))
+        for comb, winners in self.dominance_data.items():
+            for i, winner in enumerate(winners):
+                if winner is not None:
+                    starting_position = comb.index(winner) + 1
+                    win_counts_per_start[starting_position][winner] += 1
+
+        # Maak een DataFrame van de win_counts_per_startplek
+        win_df = pd.DataFrame(win_counts_per_start).T.fillna(0).astype(int)
+
+        # Sorteren kolommen op overwinningen
+        win_df = win_df.apply(lambda row: row.sort_values(ascending=False), axis=1)
+
+        # Color-map aanmaken
+        colors = plt.cm.Dark2.colors
+
+        # Plotten van de barplot
+        ax = win_df.plot(kind='bar', stacked=False, figsize=(25, 6), color=colors[:len(win_df.columns)])
+        ax.set_title('Aantal Overwinningen per Speler per Startplek', fontsize=16)
+        ax.set_xlabel('Startplek', fontsize=14)
+        ax.set_ylabel('Aantal Overwinningen', fontsize=14)
+        ax.set_xticklabels(ax.get_xticklabels(), rotation=0)
+        ax.legend(title='Speler', bbox_to_anchor=(1.05, 1), loc='upper left')
+
+        # Toon de plot
+        plt.tight_layout()

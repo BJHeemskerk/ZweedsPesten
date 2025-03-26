@@ -472,6 +472,22 @@ class Natasja(Player):
         self.has_taken_stack = False
         self.has_displayed_3 = False
 
+        self.CARD_VALUES = {
+                "2": 15,
+                "3": 20,
+                "4": 4,
+                "5": 5,
+                "6": 6,
+                "7": 7,
+                "8": 8,
+                "9": 9,
+                "10": 16,
+                "J": 11,
+                "Q": 12,
+                "K": 13,
+                "A": 14
+            }
+
     def calculate_stack_average(self, stack, exclude_specials=False):
         """Bereken gemiddelde waarde van aflegstapel, negeer speciale kaarten
         Nog aanvullen: Parameters, return. Ook bij alle andere methods van deze class.
@@ -487,7 +503,7 @@ class Natasja(Player):
             if exclude_specials and value in ["2", "3", "10"]:
                 continue
                 
-            card_value = CARD_VALUES.get(value, 0)
+            card_value = self.CARD_VALUES.get(value, 0)
             if isinstance(card_value, int):
                 total += card_value
                 count += 1
@@ -509,10 +525,10 @@ class Natasja(Player):
                 display_cards.append(threes[0])
                 remaining_cards.remove(threes[0])
                 self.has_displayed_3 = True
-            
+
             # Daarna de hoogste kaarten die open liggen
             remaining_cards.sort(
-                key=lambda card: CARD_VALUES.get(card[1:], 0),
+                key=lambda card: self.CARD_VALUES.get(card[1:], 0),
                 reverse=True
             )
             display_cards.extend(remaining_cards[:3 - len(display_cards)])
@@ -556,7 +572,7 @@ class Natasja(Player):
         if normals:
             return min(
                 normals,
-                key=lambda card: CARD_VALUES.get(card[1:], float('inf'))
+                key=lambda card: self.CARD_VALUES.get(card[1:], float('inf'))
             )
             
         if "skip" in hand:
