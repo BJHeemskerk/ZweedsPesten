@@ -159,7 +159,7 @@ class Busse(Player):
             else:
                 return "take"
 
-        # Behandeld de normale kaarten logic (hoogste kaart pakken)
+        # Behandelt de normale kaarten logic (hoogste kaart pakken)
         if normal:
             lowest_normal = min(
                 normal,
@@ -167,7 +167,7 @@ class Busse(Player):
             )
             return "".join(lowest_normal)
 
-        # Behandeld de speciale kaarten logic (eerst 10, dan 2 en 3 als laatste)
+        # Behandelt de speciale kaarten logic (eerst 10, dan 2 en 3 als laatste)
         return "".join(
             min(special, key=lambda card: special_cards.index(card[1]))
         )
@@ -451,3 +451,130 @@ class Justice_and_Terror(Player):
         else:
             move = sorted(playable_cards, key=lambda card: LOW_play_values[card[1:]], reverse=False)[:1]
             return move[0]  
+
+class Natasja(Player):
+    """
+    Strategie spelerstype Natasja:
+    - Bij de open kaarten ligt er maximaal 1 keer een 3, waarna de hoogste kaarten (A, K, Q etc) worden gekozen.
+    - Speelt normaalgesproken de laagste kaarten, maar wijkt hier eenmaal vanaf: 
+    - Wanneer er 3 tot en met 7 kaarten op tafel liggen en het gemiddelde van CARD_VALUE is 8 of hoger pakt de speler de stapel (take)
+    - Vervolgens, als er 5 of meer kaarten op tafel liggen en het gemiddelde van CARD_VALUE is 7.5 of lager, dan wordt er een Q, of anders een K,
+       of anders een A opgelegd. Zo loopt een volgende speler een groot risico om een grotere stapel te moeten pakken en heeft de speler
+       een grotere kans om hogere kaarten in handen te hebben.
+    - Speciale kaarten worden in volgorde 2 → 10 → 3 gespeeld. 
+
+    <Nog aanvullen: Parameters>
+    """
+    
+    def __init__(self, name):
+        super().__init__(name)
+        self.has_used_q_strategy = False
+        self.has_taken_stack = False
+        self.has_displayed_3 = False
+
+    def calculate_stack_average(self, stack, exclude_specials=False):
+        """Bereken gemiddelde waarde van aflegstapel, negeer speciale kaarten
+        Nog aanvullen: Parameters, return. Ook bij alle andere methods van deze class.
+        """
+        if not stack:
+            return 0
+            
+        total = 0
+        count = 0
+        
+        for card in stack:
+            value = card[1:] 
+            if exclude_specials and value in ["2", "3", "10"]:
+                continue
+                
+            card_value = CARD_VALUES.get(value, 0)
+            if isinstance(card_value, int):
+                total += card_value
+                count += 1
+                
+        return total / count if count > 0 else 0
+
+    def select_card(self, hand, game_phase, stack_of_cards, origin):
+        """Gewone strategie en speciale Q-strategie"""
+        clean_hand = [card for card in hand if card not in {"take", "skip"}]
+        
+        # Game Phase: Display Cards
+        if game_phase == "choose_display_cards":
+            display_cards = []
+            remaining_cards = clean_hand.copy()
+            
+            # Maximaal maar eenmaal een 3 bij de open kaarten
+            threes = [card for card in remaining_cards if card[1:] == "3"]
+            if threes and not self.has_displayed_3:
+                display_cards.append(threes[0])
+                remaining_cards.remove(threes[0])
+                self.has_displayed_3 = True
+            
+            # Daarna de hoogste kaarten die open liggen
+            remaining_cards.sort(
+                key=lambda card: CARD_VALUES.get(card[1:], 0),
+                reverse=True
+            )
+            display_cards.extend(remaining_cards[:3 - len(display_cards)])
+            return display_cards[:3]  # Ensure exactly 3 cards
+
+        # Als de hand is uitgespeeld, speel dan eerst een 3 bij displayed kaarten.
+        if origin == "displayed":
+            threes = [card for card in clean_hand if card[1:] == "3"]
+            if threes:
+                return threes[0]
+
+        # Game Phase: Main
+        special_order = ["2", "10", "3"]  # Prioriteitsvolgorde
+        specials = [card for card in clean_hand if card[1:] in special_order]
+        normals = [card for card in clean_hand if card[1:] not in special_order]
+        
+        # Speciale strategie: maximaal 1 keer take (als er de optie is voor take en voor niet take)
+        if (not self.has_taken_stack and 
+            3 <= len(stack_of_cards) <= 7 and 
+            self.calculate_stack_average(stack_of_cards) > 8 and 
+            "take" in hand):
+            self.has_taken_stack = True
+            return "take"
+            
+        # Q-strategie (eenmalig)
+        if (not self.has_used_q_strategy and 
+            len(stack_of_cards) >= 3 and 
+            self.calculate_stack_average(stack_of_cards, exclude_specials=True) < 8):
+            
+            for value in ["Q", "K", "A"]:
+                high_cards = [card for card in normals if card[1:] == value]
+                if high_cards:
+                    self.has_used_q_strategy = True
+                    return high_cards[0]
+        
+        for special_type in special_order:
+            specials_of_type = [card for card in specials if card[1:] == special_type]
+            if specials_of_type:
+                return specials_of_type[0]
+        
+        if normals:
+            return min(
+                normals,
+                key=lambda card: CARD_VALUES.get(card[1:], float('inf'))
+            )
+            
+        if "skip" in hand:
+            return "skip"
+        return "take" if "take" in hand else None
+
+    def play_move(self, game_phase, playable_cards, stack_of_cards):
+        """Pas de strategie toe op basis van game fase"""
+        if game_phase == "choose_display_cards":
+            return self.select_card(playable_cards, game_phase, stack_of_cards, None)
+        else:
+            if "take" in playable_cards and len(playable_cards) > 1:
+                playable_cards.remove("take")
+            if len(self.hand_cards) > 0:
+                origin = "hand"
+            elif len(self.displayed_cards) > 0:
+                origin = "displayed"
+            else:
+                origin = "hidden"
+                
+            return self.select_card(playable_cards, game_phase, stack_of_cards, origin)
