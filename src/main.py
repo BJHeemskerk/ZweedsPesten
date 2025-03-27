@@ -159,9 +159,139 @@ class Busse(Player):
             else:
                 return "take"
 
-        # Behandelt de normale kaarten logic (hoogste kaart pakken)
+        # Behandelt de normale kaarten logic (laagste kaart opleggen)
         if normal:
             lowest_normal = min(
+                normal,
+                key=lambda card: CARD_VALUES[card[1]]
+            )
+            return "".join(lowest_normal)
+
+        # Behandelt de speciale kaarten logic (eerst 10, dan 2 en 3 als laatste)
+        return "".join(
+            min(special, key=lambda card: special_cards.index(card[1]))
+        )
+
+    def play_move(self, game_phase, playable_cards, stack_of_cards):
+        """
+        Speelt de move gebaseerd op de game phase en strategie
+
+        Params:
+        ----------
+        game_phase : str
+            Een string die de game phase omschrijft
+        
+        playable_cards : list
+            Een list die de legale moves bevat
+        
+        Stack_of_cards : list
+            Lijst met de kaarten die op de stapel liggen,
+            ongebruikt in deze strategie
+
+        Returns:
+        ----------
+        De move die gespeeld wordt door de speler
+        """
+        # Behandel game phase display cards
+        if game_phase == "choose_display_cards":
+            return self.select_card(playable_cards, game_phase)
+        else:
+            # Behandel take action en normale zetten
+            if "take" in playable_cards and len(playable_cards) > 1:
+                playable_cards.remove("take")
+
+            return self.select_card(playable_cards, game_phase)
+
+
+class HighNoon(Player):
+    """
+    Strategie informatie:
+    ----------
+    Deze strategie speelt de hoogst mogelijke kaart beschikbaar.
+
+    Bij de choose_display_cards fase prioriseert de strategie
+    kaarten als de 2, 3 en 10 over hoge kaarten.
+    """
+    def select_card(self, hand, game_phase):
+        """
+        Een functie die de strategie van Busse behandelt.
+
+        Params:
+        ----------
+        hand : list
+            De kaarten die valide zijn om te spelen
+        
+        game_phase : str
+            De huidige fase van de game
+
+        Returns:
+        ----------
+        move : str
+            Een string die de kaart(en) bevat die gespeeld
+            gaan worden op basis van de strategie
+        """
+        CARD_VALUES = {
+                "2": 19,
+                "3": 20,
+                "4": 4,
+                "5": 5,
+                "6": 6,
+                "7": 7,
+                "8": 8,
+                "9": 9,
+                "10": 18,
+                "J": 11,
+                "Q": 12,
+                "K": 13,
+                "A": 14
+            }
+
+        # De speciale kaarten die altijd speelbaar zijn
+        special_cards = ["10", "2", "3"]
+
+        # Strippen van de opties om de kaart waarden en suits uit elkaar te halen
+        hand_stripped = [(card[0], card[1:]) for card in hand if card not in {"take", "skip"}]
+
+        # List comprehension om speciale kaarten van normale kaarten te scheiden
+        special = [card for card in hand_stripped if card[1] in special_cards]
+        normal = [card for card in hand_stripped if card[1] not in special_cards]
+
+        # Game Phase: Display Cards
+        # Kiest de drie beste kaarten als display (speciale kaarten eerst)
+        if game_phase == "choose_display_cards":
+            amount_chosen = 0
+            chosen_display_cards = []
+            while amount_chosen != 3:
+                if special:
+                    card = max(
+                        special,
+                        key=lambda card: special_cards.index(card[1])
+                    )
+                    full_card = "".join(card)
+                    chosen_display_cards.append(full_card)
+                    special.remove(card)
+                else:
+                    card = max(
+                        normal,
+                        key=lambda card: CARD_VALUES[card[1]]
+                    )
+                    full_card = "".join(card)
+                    chosen_display_cards.append(full_card)
+                    normal.remove(card)
+
+                amount_chosen += 1
+            return chosen_display_cards
+
+        # Behandelen van skip en take indien dit de enige opties zijn
+        if not special and not normal:
+            if "skip" in hand:
+                return "skip"
+            else:
+                return "take"
+
+        # Behandelt de normale kaarten logic (hoogste kaart opleggen)
+        if normal:
+            lowest_normal = max(
                 normal,
                 key=lambda card: CARD_VALUES[card[1]]
             )

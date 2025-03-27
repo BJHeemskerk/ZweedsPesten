@@ -14,7 +14,7 @@ import numpy as np
 import seaborn as sns
 from collections import defaultdict
 import matplotlib.colors as mcolors
-from main import Player, Tim, Low, Jasper, Busse, Justice_and_Terror, Natasja
+from main import Player, Tim, Low, Jasper, Busse, Justice_and_Terror, Natasja, HighNoon
 
 
 
@@ -63,14 +63,13 @@ class ZweedsPesten():
 
         
         player_types = {
-
             "busse": Busse,
             "tim": Tim,
             "low": Low,
             "jasper" : Jasper,
             "justice_and_terror": Justice_and_Terror,
-            "natasja": Natasja
-
+            "natasja": Natasja,
+            "high_noon": HighNoon
         }
 
         self.players = [player_types.get(name, Player)(name) for name in players]
@@ -92,9 +91,15 @@ class ZweedsPesten():
         standaard Player aangemaakt en die krijgt dan de ingevoerde naam. 
 
         """
-        
-
-        player_types = {"tim": Tim, "low": Low, "jasper" : Jasper, "busse": Busse, "justice_and_terror": Justice_and_Terror}
+        player_types = {
+            "busse": Busse,
+            "tim": Tim,
+            "low": Low,
+            "jasper" : Jasper,
+            "justice_and_terror": Justice_and_Terror,
+            "natasja": Natasja,
+            "high_noon": HighNoon
+        }
 
         return player_types.get(name, Player)(name)
 
