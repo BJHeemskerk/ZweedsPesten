@@ -210,16 +210,7 @@ class ZweedsPesten():
             origin = "displayed"
 
         else:
-            #card_to_play = player.hidden_cards[-1]
-            #print(player.hidden_cards[-1])
-            #print(player.hidden_cards)
             available_cards = [player.hidden_cards[-1]]
-            #available_cards.append(player.hidden_cards[-1])
-            #print(card_to_play)
-            #print(available_cards)
-            #player.hand_cards.append(player.hidden_cards[-1])
-            #print(player.hidden_cards)
-            #player.hidden_cards.remove(player.hidden_cards[-1])
             origin = "hidden"
                        
         if len(self.stack_of_cards) > 0:
@@ -289,7 +280,7 @@ class ZweedsPesten():
         else:
             return False
     
-    def game_loop(self, verbose=1):
+    def game_loop(self, verbose=1, selected_players=None):
         """
         Runt een ronde Zweeds Pesten, waarbij alle fases van het spel, de beurten van de spelers en speciale effecten van kaarten voorbijkomen.
         
@@ -298,13 +289,10 @@ class ZweedsPesten():
             1 - Winners only
             2 - Full verbose (detailed game state)
         """
-        if len(self.players) > 4:
+        if selected_players is None:
             selected_players = self.players[:4]
-        else:
-            selected_players = self.players
 
         game_phase = "choose_display_cards"
-        turn_timer = 0
         self.winners = []
 
         self.deck = self.create_deck()
@@ -486,8 +474,8 @@ class ZweedsPesten():
 
             for i in range(sims):
                 # Maak een nieuwe game met deze permutatie van spelers
-                self.players = [self.get_player_instance(name) for name in perm]
-                self.game_loop(verbose=verbose)
+                selected_players = [self.get_player_instance(name) for name in perm]
+                self.game_loop(verbose=verbose, selected_players=selected_players)
                 self.placements[f"Game {i + 1} (Order: {perm})"] = self.winners
 
                 # Ophalen van de beste speler bij elke permutatie
