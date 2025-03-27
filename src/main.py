@@ -486,7 +486,7 @@ class Jasper(Player):
             return move
         
         if game_phase == "main":
-            if len(playable_cards) > 1:
+            if len(playable_cards) > 0:
                 if "take" in playable_cards:
                     playable_cards.remove("take") 
                     move = sorted(playable_cards, key=lambda card: LOW_play_values[card[1:]], reverse=False)[:1]
