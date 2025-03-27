@@ -203,11 +203,11 @@ class Busse(Player):
             return self.select_card(playable_cards, game_phase)
 
 
-class HighNoon(Player):
+class LowNoon(Player):
     """
     Strategie informatie:
     ----------
-    Deze strategie speelt de hoogst mogelijke kaart beschikbaar.
+    Deze strategie speelt vaak de laagst mogelijke kaart beschikbaar.
 
     Bij de choose_display_cards fase prioriseert de strategie
     kaarten als de 2, 3 en 10 over hoge kaarten.
@@ -230,22 +230,6 @@ class HighNoon(Player):
             Een string die de kaart(en) bevat die gespeeld
             gaan worden op basis van de strategie
         """
-        CARD_VALUES = {
-                "2": 19,
-                "3": 20,
-                "4": 4,
-                "5": 5,
-                "6": 6,
-                "7": 7,
-                "8": 8,
-                "9": 9,
-                "10": 18,
-                "J": 11,
-                "Q": 12,
-                "K": 13,
-                "A": 14
-            }
-
         # De speciale kaarten die altijd speelbaar zijn
         special_cards = ["10", "2", "3"]
 
@@ -289,18 +273,20 @@ class HighNoon(Player):
             else:
                 return "take"
 
-        # Behandelt de normale kaarten logic (hoogste kaart opleggen)
+        # Behandelt de normale kaarten logic (laagste kaart opleggen met 70%)
+        choose_lowest = random.random() < 0.7
+        complete_deviation = random.random() < 0.2  # 20% kans om compleet af te wijken
+        
+        if complete_deviation:
+            return "".join(random.choice(hand_stripped))
+        
         if normal:
-            lowest_normal = max(
-                normal,
-                key=lambda card: CARD_VALUES[card[1]]
-            )
-            return "".join(lowest_normal)
+            chosen_card = min(normal, key=lambda card: CARD_VALUES[card[1]]) if choose_lowest \
+                          else max(normal, key=lambda card: CARD_VALUES[card[1]])
+            return "".join(chosen_card)
 
-        # Behandelt de speciale kaarten logic (eerst 10, dan 2 en 3 als laatste)
-        return "".join(
-            min(special, key=lambda card: special_cards.index(card[1]))
-        )
+        return "".join(min(special, key=lambda card: special_cards.index(card[1])))
+
 
     def play_move(self, game_phase, playable_cards, stack_of_cards):
         """

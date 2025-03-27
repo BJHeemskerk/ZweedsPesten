@@ -14,7 +14,7 @@ import numpy as np
 import seaborn as sns
 from collections import defaultdict
 import matplotlib.colors as mcolors
-from main import Player, Tim, Low, Jasper, Busse, Justice_and_Terror, Natasja, HighNoon
+from main import Player, Tim, Low, Jasper, Busse, Justice_and_Terror, Natasja, LowNoon
 
 
 
@@ -69,7 +69,7 @@ class ZweedsPesten():
             "jasper" : Jasper,
             "justice_and_terror": Justice_and_Terror,
             "natasja": Natasja,
-            "high_noon": HighNoon
+            "low_noon": LowNoon
         }
 
         self.players = [player_types.get(name, Player)(name) for name in players]
@@ -98,7 +98,7 @@ class ZweedsPesten():
             "jasper" : Jasper,
             "justice_and_terror": Justice_and_Terror,
             "natasja": Natasja,
-            "high_noon": HighNoon
+            "low_noon": LowNoon
         }
 
         return player_types.get(name, Player)(name)
@@ -737,7 +737,7 @@ class ZweedsPesten():
             )
 
         # PLotten van de heatmaps op 1 subplot
-        fig, axes = plt.subplots(1, 2, figsize=(25, 8))
+        fig, axes = plt.subplots(1, 2, figsize=(25, 40))
 
         # Eerste heatmap: Winpercentages
         sns.heatmap(percent_df, annot=True, cmap=cmap, cbar_kws={'label': 'Win Percentage (%)'}, annot_kws={"color": "black", "size": 12}, fmt='.2f', ax=axes[0])
@@ -759,7 +759,7 @@ class ZweedsPesten():
         # Legenda combinaties (y-as) toevoegen
         fig.text(1, 1, "Combination Key Mapping:", fontsize=14, verticalalignment='top')
         for i, (comb, label) in enumerate(comb_labels.items()):
-            fig.text(1, 0.97 - (i + 1) * 0.04, f"{label}: {comb}", fontsize=12)
+            fig.text(1, 0.97 - (i + 1) * 0.01, f"{label}: {comb}", fontsize=12)
 
     def wins_per_start(self):
         """
