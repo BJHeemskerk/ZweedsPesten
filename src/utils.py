@@ -575,24 +575,6 @@ class ZweedsPesten():
             for player in self.performance_data.index
         ]
 
-        # Performance metric (lager is beter)
-        self.performance_data["Performance Score"] = [
-            round(np.std([
-                10 * int(self.medals.loc[player, "1st"]),
-                7 * int(self.medals.loc[player, "2nd"]),
-                4 * int(self.medals.loc[player, "3rd"]),
-                1 * (
-                    self.performance_data.loc[player, "Aantal Games"] -
-                    int(self.medals.loc[player, "1st"]) -
-                    int(self.medals.loc[player, "2nd"]) -
-                    int(self.medals.loc[player, "3rd"])
-                    )
-                ]),
-                2
-            )
-            for player in self.performance_data.index
-        ]
-
         # Aantal keren eerste
         self.performance_data["1st"] = [
             int(self.medals.loc[player, "1st"])
