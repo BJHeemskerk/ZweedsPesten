@@ -376,15 +376,16 @@ class Tim(Player):
             return move
         
         elif game_phase == "main":
-            if len(self.displayed_cards) > 2 and len(playable_cards) > 1 and len(stack_of_cards) > 0:
-                playable_cards.remove("take")
-                scores = [Tim_take_values[card[1:]] for card in stack_of_cards]
-                average_score = sum(scores) / len(scores) 
-                #print("average_score:", average_score)
-                if average_score > 17:
-                    return "take"
-                else:
-                    playable_cards.append("take")
+            if len(self.displayed_cards) > 2 and len(playable_cards) > 1 and len(stack_of_cards) > 0 or len(stack_of_cards)==0:
+                if "take" in playable_cards:
+                    playable_cards.remove("take")
+                    scores = [Tim_take_values[card[1:]] for card in stack_of_cards]
+                    average_score = sum(scores) / len(scores) 
+                    #print("average_score:", average_score)
+                    if average_score > 17:
+                        return "take"
+                    else:
+                        playable_cards.append("take")
 
                 
             if "take" in playable_cards and len(playable_cards) > 1:
@@ -486,11 +487,26 @@ class Jasper(Player):
             return move
         
         if game_phase == "main":
-            if len(playable_cards) > 0:
+            if len(playable_cards) > 1 or len(stack_of_cards)==0:
                 if "take" in playable_cards:
                     playable_cards.remove("take") 
                     move = sorted(playable_cards, key=lambda card: LOW_play_values[card[1:]], reverse=False)[:1]
-                    return move[0]  
+
+                    doubles = {num for num in move if move.count(num) == 2}
+                    triples = {num for num in move if move.count(num) == 3}
+                    quartet = {num for num in move if move.count(num) == 4}
+
+                    if quartet:
+                        return min(quartet)
+                    elif triples:
+                        min(triples)
+                    elif doubles:
+                        min(doubles)
+                    else:
+                        return move[0]  
+
+
+  
             else:
                 return "take"
 
@@ -546,7 +562,7 @@ class Justice_and_Terror(Player):
             return move
         
         if game_phase == "main":
-            if len(playable_cards) > 1:
+            if len(playable_cards) > 1 or len(stack_of_cards)==0:
                 if "take" in playable_cards:
                     playable_cards.remove("take") 
                     move = sorted(playable_cards, key=lambda card: LOW_play_values[card[1:]], reverse=False)[:1]
