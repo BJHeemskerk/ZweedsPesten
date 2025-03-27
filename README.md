@@ -3,12 +3,9 @@ Deze repository is gemaakt om Zweeds Pesten te simuleren in python. Hiervoor is 
 
 ## Modulaire Programmatuur
 Om de code overzichtelijk, herbruikbaar en per taak logisch op te delen, hebben wij gebruik gemaakt van 3 code-eenheden: 
-
-•	Python-script utils.py met de mechanieken van een ronde van het spel “Zweeds Pesten”.
-•	Python-script main.py dat een template voor de speler en daarvan ervende spelerstrategieen bevat
-•	Jupyter Notebook ZweedsPestenTesten.ipynb  met de algemene flow van het programma
-
-We maken dus gebruik van 3 code-eenheden om de code modulair en overzichtelijk op te zetten: een notebook en twee Python scripts.
+- Python-script utils.py met de mechanieken van een ronde van het spel “Zweeds Pesten”.
+- Python-script main.py dat een template voor de speler en daarvan ervende spelerstrategieen bevat
+- Jupyter Notebook ZweedsPestenTesten.ipynb  met de algemene flow van het programma
 
 ### utils.py
 De kern van het spel wordt gedefinieerd in utils.py. Dit script bevat de logica van het spelmechaniek. Het script bevat de hoofdlus van het spel in de vorm van game_loop().  
