@@ -1,1 +1,10 @@
-MOET NOG WORDEN INGEVULD!
+collections     # (standaardbibliotheek, niet nodig om te installeren)
+os              # (standaardbibliotheek, niet nodig om te installeren)
+sys             # (standaardbibliotheek, niet nodig om te installeren)
+random          # (standaardbibliotheek, niet nodig om te installeren)
+itertools       # (standaardbibliotheek, niet nodig om te installeren)
+matplotlib
+pandas
+IPython
+numpy
+seaborn
