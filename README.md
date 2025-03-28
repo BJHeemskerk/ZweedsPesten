@@ -34,11 +34,11 @@ Dit wordt gedaan door in het begin kaarten zoals een 9 of een J te spelen. De sp
 Hoe goed een stapel is om te pakken, wordt berekend door aan elke kaart een waarde toe te kennen. De slechtste kaart, een 4, heeft bijvoorbeeld een waarde van -25, terwijl de beste kaarten, zoals een 2, 10 of A, een waarde van 20 hebben. De strategie berekent vervolgens de gemiddelde waarde van een stapel kaarten. Als de stapel een waarde heeft van minimaal 17, dan is het de moeite waard om deze te pakken. Anders wordt de slechtst mogelijke kaart gespeeld.
 
 ### Strategie “Low”
-<Zelfde als Jasper volgens mij!>
+Kiest altijd de eerst laagste waarde en pakt alleen de stapel als het moet.
 
 ### Strategie “Jasper”
 Strategie "Jasper" kenmerkt zich door de nadruk te leggen op het uitspelen van lage kaarten. De waarde van de kaarten is volgens een eigen list, genaamd LOW_play_values opgesteld. De strategie maakt dus geen gebruik van list CARD_VALUES. 
-De LOW_play_values met de waarden van verschillende kaarten werkt door bij het kiezen van de kaarten die open op tafel komen te liggen. De hoogst gewaardeerde kaarten uit LOW_play_values zijn allereerst de 3, daarna de 10 en daarna de 2 en daarna de kaarten van de Aas tot en met de 4. Als een speler dus een 3 krijgt, dan zal die open op tafel komen te liggen, omdat die de hoogste waarde heeft gekregen volgens LOW_play_values.
+De LOW_play_values met de waarden van verschillende kaarten werkt door bij het kiezen van de kaarten die open op tafel komen te liggen. De hoogst gewaardeerde kaarten uit LOW_play_values zijn allereerst de 3, daarna de 10 en daarna de 2 en daarna de kaarten van de Aas tot en met de 4. Als een speler dus een 3 krijgt, dan zal die open op tafel komen te liggen, omdat die de hoogste waarde heeft gekregen volgens LOW_play_values. Daarnaast heeft de "Jasper strategie" een focus op het zo snel mogelijk spelen van dubbele kaarten. Als in de playable_cards meer dan een keer de zelfde waarde voorkomt dan wordt die eerst gespeeld.
 Wat verder nog interessant is aan deze strategie is dat er bij de Jasper-strategie wordt nooit de aflegstapel in de hand wordt genomen (take), tenzij de speler niet anders kan.
 
 ### Strategie “Justice-and-Terror”
