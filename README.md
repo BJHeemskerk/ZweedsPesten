@@ -2,20 +2,20 @@
 
 Welkom bij de GitHub-repository voor de analyse en ontwikkeling van strategieën voor het kaartspel **Zweeds Pesten**. Dit project bevat code en notebooks waarin verschillende strategieën worden getest en geëvalueerd.
 
-## Wat is Zweeds Pesten
+## 🂡 Wat is Zweeds Pesten?
 
-Zweeds Pesten is een kaartspel dat vaak in de pauzes wordt gespeeld door ons en onze klasgenoten van ADS&AI. Het spel is variant op het, in Nederland populaire, kaartspel Pesten. Bij Zweeds pesten draait het om het leggen van kaarten die hetzelfde of hoger zijn dan de kaart die boven op de aflegstapel ligt. Ook zijn er, net als bij pesten, speciale kaarten die jouw sneller naar de overwinning kunnen brengen of die de tegenstander kunnen belemmeren. Het uiteindelijk doel van het spel is gelijk aan dat van pesten, zorgen dat je als eerste geen kaarten meer hebt. 
+Zweeds Pesten is een kaartspel dat vaak in de pauzes wordt gespeeld door ons en onze klasgenoten van ADS&AI. Het spel is variant op het, in Nederland populaire, kaartspel Pesten. Bij Zweeds pesten draait het om het leggen van kaarten die hetzelfde of hoger zijn dan de kaart die boven op de aflegstapel ligt. Ook zijn er, net als bij pesten, speciale kaarten die jouw sneller naar de overwinning kunnen brengen of die de tegenstander kunnen belemmeren. Het uiteindelijk doel van het spel is gelijk aan dat van pesten, zorgen dat je als eerste geen kaarten meer hebt. De volledig gehanteerde regels zijn te vinden in [`Regels`](Regels.txt).
 
 ## 📁 Projectstructuur
 
 ```plaintext
 📁 ZweedsPesten-Strategie
 ├── 📁 notebooks/
-│   ├── 📜 TestenStratBusse.ipynb  # Testen van Busse's strategie
-│   ├── 📜 ZweedsPestenTesten.ipynb  # Algemene tests en strategieën
+│   ├── 📜 TestenStratBusse.ipynb    # Testen van Busse's strategie
+│   ├── 📜 ZweedsPestenTesten.ipynb  # Algemene tests voor strategieën
 ├── 📁 src/
-│   ├── 📜 main.py  # Implementatie van strategieën
-│   ├── 📜 utils.py  # Code en functies voor het spel
+│   ├── 📜 main.py    # Implementatie van strategieën
+│   ├── 📜 utils.py   # Code en functies voor het spel
 ├── 📜 .gitignore
 ├── 📜 LICENSE
 ├── 📜 README.md
@@ -46,6 +46,8 @@ jupyter notebook
 ```
 
 ## 📊 Strategieën
+
+Momenteel zijn de volgende strategieën aanwezig in de code:
 
 ### Strategie "Player" (De basis strategie)
 De Player-strategie is de standaardimplementatie van een strategie. Deze strategie maakt willekeurige, ondoordachte keuzes. Bij het kiezen van open kaarten (display_cards) kiest deze strategie willekeurig 3 kaarten. Tijdens het spelen van het spel kiest hij een willekeurige kaart om te spelen uit zijn hand en eens in de zoveel tijd zal hij de aflegstapel in de hand nemen. Deze take-actie onderneemt hij dus ook op basis van willekeur. De onderliggende logica bestaat volledig uit willekeurige keuzes zonder tactische overwegingen, wat deze strategie ongeschikt maakt als serieuze spelvariant. Van de spelerstrategieën in de volgende paragrafen bekijken wij wel hoe sterk of hoe zwak ze uitvallen in een simulatie. Wanneer een speler naam geen toegewezen class heeft, wordt de Player class zijn of haar strategie.
