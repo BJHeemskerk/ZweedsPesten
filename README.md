@@ -13,7 +13,7 @@ Zweeds Pesten is vrij genoeg voor het gebruiken van vele verschillende strategie
 ## 📁 Projectstructuur
 
 ```plaintext
-📁 ZweedsPesten-Strategie
+📁 ZweedsPesten
 ├── 📁 notebooks/
 │   ├── 📜 TestenStratBusse.ipynb    # Testen van Busse's strategie
 │   ├── 📜 ZweedsPestenTesten.ipynb  # Algemene tests voor strategieën
@@ -32,8 +32,8 @@ Volg deze stappen om het project lokaal op te zetten:
 
 1. **Clone de repository**
    ```bash
-   git clone https://github.com/jouw-gebruikersnaam/ZweedsPesten-Strategie.git
-   cd ZweedsPesten-Strategie
+   git clone https://github.com/jouw-gebruikersnaam/ZweedsPesten.git
+   cd ZweedsPesten
    ```
 
 2. **Installeer de vereiste pakketten**
